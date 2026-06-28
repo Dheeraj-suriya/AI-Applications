@@ -1,0 +1,172 @@
+
+import customtkinter as ctk
+from tkinter import messagebox
+from deep_translator import GoogleTranslator
+from gtts import gTTS
+from playsound import playsound
+import threading
+import os
+
+from FAQChatbot_2 import send_message
+
+ctk.set_appearance_mode("light")
+ctk.set_default_color_theme("blue")
+
+languages = {
+    "Auto Detect": "auto",
+    "English": "en",
+    "Hindi": "hi",
+    "Kannada": "kn",
+    "Telugu": "te",
+    "Tamil": "ta",
+    "Malayalam": "ml",
+    "French": "fr",
+    "German": "de",
+    "Spanish": "es"
+}
+
+history = []
+
+app = ctk.CTk()
+app.title("LinguaAI - Smart Language Translator")
+app.geometry("1400x850")
+
+def update_status(msg):
+    status_label.configure(text=msg)
+
+def translate_text():
+    try:
+        text = input_box.get("1.0", "end").strip()
+        if not text:
+            messagebox.showwarning("Warning", "Please enter text.")
+            return
+
+        src = languages[source_combo.get()]
+        dest = languages[target_combo.get()]
+
+        translated = GoogleTranslator(source=src, target=dest).translate(text)
+
+        output_box.delete("1.0", "end")
+        output_box.insert("end", translated)
+
+        history.append(f"{text[:40]} -> {translated[:40]}")
+        history_box.delete("1.0", "end")
+        history_box.insert("end", "\n".join(history[-10:]))
+
+        chars = len(text)
+        words = len(text.split())
+        counter_label.configure(text=f"Characters: {chars} | Words: {words}")
+
+        update_status("✓ Translation Successful")
+
+    except Exception as e:
+        messagebox.showerror("Translation Error", str(e))
+
+def speak_text():
+    try:
+        text = output_box.get("1.0", "end").strip()
+        if not text:
+            return
+
+        lang = languages[target_combo.get()]
+        if lang == "auto":
+            lang = "en"
+
+        filename = "speech.mp3"
+        gTTS(text=text, lang=lang).save(filename)
+        playsound(filename)
+
+        if os.path.exists(filename):
+            os.remove(filename)
+
+        update_status("✓ Speech Played")
+
+    except Exception as e:
+        messagebox.showerror("Speech Error", str(e))
+
+def speak_thread():
+    threading.Thread(target=speak_text, daemon=True).start()
+
+def copy_text():
+    text = output_box.get("1.0", "end")
+    app.clipboard_clear()
+    app.clipboard_append(text)
+    update_status("✓ Copied")
+
+def clear_text():
+    input_box.delete("1.0", "end")
+    output_box.delete("1.0", "end")
+    update_status("Ready")
+
+def swap_languages():
+    s = source_combo.get()
+    t = target_combo.get()
+    source_combo.set(t)
+    target_combo.set(s)
+
+def toggle_theme():
+    mode = ctk.get_appearance_mode()
+    ctk.set_appearance_mode("dark" if mode == "Light" else "light")
+
+header = ctk.CTkLabel(app, text="🌐 LinguaAI - Smart Language Translator",
+                      font=("Segoe UI", 30, "bold"))
+header.pack(pady=(15,5))
+
+subtitle = ctk.CTkLabel(app, text="Translate, Listen and Learn Languages Instantly")
+subtitle.pack()
+
+top = ctk.CTkFrame(app)
+top.pack(fill="x", padx=20, pady=10)
+
+source_combo = ctk.CTkComboBox(top, values=list(languages.keys()))
+source_combo.pack(side="left", padx=15, pady=15)
+source_combo.set("English")
+
+swap_btn = ctk.CTkButton(top, text="⇄", width=50, command=swap_languages)
+swap_btn.pack(side="left")
+
+target_combo = ctk.CTkComboBox(top, values=list(languages.keys()))
+target_combo.pack(side="left", padx=15)
+target_combo.set("Hindi")
+
+theme_btn = ctk.CTkButton(top, text="🌙 Theme", command=toggle_theme)
+theme_btn.pack(side="right", padx=15)
+
+main = ctk.CTkFrame(app)
+main.pack(fill="both", expand=True, padx=20, pady=10)
+
+left = ctk.CTkFrame(main)
+left.pack(side="left", fill="both", expand=True, padx=10, pady=10)
+
+ctk.CTkLabel(left, text="Input Text", font=("Segoe UI",16,"bold")).pack(pady=5)
+input_box = ctk.CTkTextbox(left, font=("Segoe UI", 15))
+input_box.pack(fill="both", expand=True, padx=10, pady=10)
+
+right = ctk.CTkFrame(main)
+right.pack(side="left", fill="both", expand=True, padx=10, pady=10)
+
+ctk.CTkLabel(right, text="Translation", font=("Segoe UI",16,"bold")).pack(pady=5)
+output_box = ctk.CTkTextbox(right, font=("Segoe UI", 15))
+output_box.pack(fill="both", expand=True, padx=10, pady=10)
+
+buttons = ctk.CTkFrame(app)
+buttons.pack(fill="x", padx=20, pady=10)
+
+ctk.CTkButton(buttons, text="🔄 Translate", command=translate_text).pack(side="left", padx=10, pady=10)
+ctk.CTkButton(buttons, text="🎤 Speak", command=speak_thread).pack(side="left", padx=10)
+ctk.CTkButton(buttons, text="📋 Copy", command=copy_text).pack(side="left", padx=10)
+ctk.CTkButton(buttons, text="🗑 Clear", command=clear_text).pack(side="left", padx=10)
+
+bottom = ctk.CTkFrame(app)
+bottom.pack(fill="x", padx=20, pady=10)
+
+history_box = ctk.CTkTextbox(bottom, height=100)
+history_box.pack(fill="x", padx=10, pady=10)
+
+counter_label = ctk.CTkLabel(app, text="Characters: 0 | Words: 0")
+counter_label.pack()
+
+status_label = ctk.CTkLabel(app, text="Ready")
+status_label.pack(pady=5)
+
+app.mainloop()
