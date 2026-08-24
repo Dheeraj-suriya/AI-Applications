@@ -39,7 +39,29 @@ The purpose of the FAQ Chatbot is to demonstrate how conversational applications
 ```text
 FAQChatbot_2.py
 ```
+---
 
+## 🧠 Technologies Used
+
+| Technology | Purpose |
+|------------|---------|
+| 🐍 Python | Core programming language |
+| 🤖 Artificial Intelligence | Application development |
+| 🧠 Natural Language Processing | Text and language processing |
+| 💬 Chatbot Logic | FAQ-based conversational responses |
+
+---
+
+## 🎯 Purpose
+
+The purpose of the FAQ Chatbot is to demonstrate how Python can be used to
+build a simple conversational application for answering frequently asked
+questions.
+
+The project provides an interactive way for users to ask questions and
+receive automated responses through a text-based chatbot interface.
+
+---
 # 🌍 2. LinguaAI - Smart Language Translator
 
 LinguaAI is a Python-based desktop language translation application designed to
